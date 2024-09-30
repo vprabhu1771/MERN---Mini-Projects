@@ -104,7 +104,7 @@ This mini-project teaches key React concepts like **state management**, **side e
 
 `App.jsx`
 
-```
+```jsx
 import './App.css'
 import Stopwatch from './components/Stopwatch'
 
