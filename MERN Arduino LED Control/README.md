@@ -19,63 +19,72 @@ To create a **MERN** (MongoDB, Express, React, Node.js) project that uses an env
 2. **Set up `.env` file**:
    Create a `.env` file in the root of your project and add your MongoDB URI:
    ```
-   MONGO_URI=mongodb://localhost:27017/mydatabase
-   ```
+    HOST=192.168.1.122
+    PORT=9000
+    MONGO_URI=mongodb://localhost:27017/mydatabase
+    ```
 
 3. **Configure `server.js`**:
-   ```javascript
-   require('dotenv').config(); // Load environment variables
-  const express = require('express');
-  const mongoose = require('mongoose');
-  const SerialPort = require('serialport');
-  const Readline = require('@serialport/parser-readline');
+```javascript
+require('dotenv').config(); // Load environment variables
+const express = require('express');
+const mongoose = require('mongoose');
+const SerialPort = require('serialport');
+const Readline = require('@serialport/parser-readline');
+const cors = require('cors'); // Import CORS
 
-  const app = express();
-  const port = process.env.PORT || 5000;
+const app = express();
+const host = process.env.HOST || '0.0.0.0'; // Changed to 'localhost'
+const port = process.env.PORT || 5000;
 
-  // Middleware to parse JSON bodies
-  app.use(express.json());
+// Middleware to parse JSON bodies
+app.use(express.json());
+app.use(cors()); // Enable CORS for all routes
 
-  // Connect to MongoDB
-  mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.log(err));
 
-  // Serial communication for Arduino
-  const portName = 'COM4';  // Replace with the correct port where Arduino is connected
-  const arduinoPort = new SerialPort(portName, { baudRate: 9600 });
-  const parser = arduinoPort.pipe(new Readline({ delimiter: '\n' }));
+// Serial communication for Arduino
+const portName = 'COM4';  // Replace with the correct port where Arduino is connected
+const arduinoPort = new SerialPort(portName, { baudRate: 9600 });
+const parser = arduinoPort.pipe(new Readline({ delimiter: '\n' }));
 
-  arduinoPort.on('open', () => {
-    console.log(`Serial Port ${portName} is opened`);
-  });
+arduinoPort.on('open', () => {
+  console.log(`Serial Port ${portName} is opened`);
+});
 
-  // Route to trigger LED blink
-  app.post('/blink-led', (req, res) => {
-    
-    const { blink } = req.body;  // Extract the blink value from the request body
-    
-    console.log(req.body);
-    
+// Route to trigger LED blink
+app.post('/blink-led', (req, res) => {
+  
+  const { blink } = req.body;  // Extract the blink value from the request body
+  
+  console.log(req.body);
+  
+  if (blink === '1') 
+  {
+    arduinoPort.write('1');  // Send signal to Arduino to turn LED on
+    return res.send('LED is turned ON');
+  } 
+  else if (blink === '0') 
+  {
+    arduinoPort.write('0');  // Send signal to Arduino to turn LED off
+    return res.send('LED is turned OFF');
+  } 
+  else 
+  {
+    return res.status(400).send('Invalid value for blink. Use "0" to turn off and "1" to turn on.');
+  }
+});
 
-    if (blink === '1') {
-      arduinoPort.write('1');  // Send signal to Arduino to turn LED on
-      return res.send('LED is turned ON');
-    } else if (blink === '0') {
-      arduinoPort.write('0');  // Send signal to Arduino to turn LED off
-      return res.send('LED is turned OFF');
-    } else {
-      return res.status(400).send('Invalid value for blink. Use "0" to turn off and "1" to turn on.');
-    }
-  });
-
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-   ```
+app.listen(port, () => {
+  console.log(`Server running on http://${host}:${port}`);
+});
+```
 
 4. **Arduino Code**:
    Upload this code to your Arduino board:
@@ -119,32 +128,51 @@ To create a **MERN** (MongoDB, Express, React, Node.js) project that uses an env
    cd frontend
    ```
 
+`.env`
+
+```
+VITE_API_BASE_URL=http://192.168.1.122:9000
+```
+
 2. **Create a Button to Trigger LED Blink**:
    Inside `src/App.js`, set up a button to trigger the LED blink route:
-   ```javascript
-   import React from 'react';
+  ```javascript
+  import React, { useState } from 'react';
 
-   function App() {
-     const handleBlink = async () => {
-       try {
-         const response = await fetch('http://localhost:5000/blink-led');
-         const result = await response.text();
-         alert(result);
-       } catch (error) {
-         console.error('Error:', error);
-       }
-     };
+  function App() {
+    // Initialize isBlinking to 0 (LED is off)
+    const [isBlinking, setIsBlinking] = useState(0);
 
-     return (
-       <div className="App">
-         <h1>Arduino LED Control</h1>
-         <button onClick={handleBlink}>Blink LED</button>
-       </div>
-     );
-   }
+    const toggleLed = async () => {
+      // Calculate new state: if isBlinking is 0, set it to 1; otherwise set it to 0
+      const newBlinkState = isBlinking === 0 ? 1 : 0;
+      setIsBlinking(newBlinkState); // Update state
 
-   export default App;
-   ```
+      try {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/blink-led`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blink: newBlinkState.toString() }), // Pass blink state as a string
+        });
+      } catch (error) {
+        console.error('Error toggling LED:', error);
+      }
+    };
+
+    return (
+      <div className="App">
+        <h1>Arduino LED Controller</h1>
+        <button onClick={toggleLed}>
+          {isBlinking === 1 ? 'Stop Blinking' : 'Start Blinking'}
+        </button>
+      </div>
+    );
+  }
+
+  export default App;
+  ```
 
 ### 3. Connecting the Frontend and Backend
 
