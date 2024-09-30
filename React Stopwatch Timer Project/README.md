@@ -11,6 +11,7 @@ npm start
 
 ### 2. **Basic Component Structure**
 You'll build a single `Stopwatch` component. This component will handle the timer logic and UI.
+`components\Stopwatch.jsx`
 
 ### 3. **Add State and Timer Logic**
 For a stopwatch, you need to track time and the start/stop/pause functionality. You can use React’s `useState` and `useEffect` hooks for this.
@@ -100,3 +101,22 @@ Once you have the basic functionality, you can add additional features:
 - **Persist Time**: Save the time to localStorage so it doesn’t reset when the page is refreshed.
 
 This mini-project teaches key React concepts like **state management**, **side effects** with `useEffect`, and **conditional rendering**!
+
+`App.jsx`
+
+```
+import './App.css'
+import Stopwatch from './components/Stopwatch'
+
+function App() {  
+
+  return (
+    <>
+      <Stopwatch />
+    </>
+  )
+
+}
+
+export default App
+```
