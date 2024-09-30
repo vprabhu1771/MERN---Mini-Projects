@@ -72,14 +72,24 @@ To create a **MERN** (MongoDB, Express, React, Node.js) project that uses an env
    }
 
    void loop() {
-     if (Serial.available() > 0) {
-       char command = Serial.read();
-       if (command == '1') {
-         digitalWrite(ledPin, HIGH);  // Turn the LED on
-         delay(1000);                 // Keep it on for a second
-         digitalWrite(ledPin, LOW);   // Turn the LED off
-       }
-     }
+
+        // Check if data is available to read
+        if (Serial.available() > 0) {
+
+            // Read the incoming byte
+            char command = Serial.read();
+            
+            if (command == '1') 
+            {
+                // Turn the LED on
+                digitalWrite(ledPin, HIGH);
+            }
+            else if (command == '0')
+            {
+                // Turn the LED off
+                digitalWrite(ledPin, LOW);
+            }
+        }
    }
    ```
 
