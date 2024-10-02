@@ -111,3 +111,7 @@ export default ImageToText;
 
 ### Optional:
 You can add styles and error handling to enhance the app's user experience.
+
+![Image](1.PNG)
+
+![Image](2.PNG)
