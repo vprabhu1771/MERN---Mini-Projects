@@ -4,29 +4,40 @@ The `useCallback` hook memoizes a function and returns a stable reference to it 
 **Example: Callback Memoization**
 
 ```jsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback}  from 'react';
 
-function Child({ onClick }) {
-  console.log('Child rendered');
-  return <button onClick={onClick}>Click me</button>;
-}
+function Counter() {
 
-function Parent() {
-  const [count, setCount] = useState(0);
+    const [count, setCount] = useState(0);
 
-  const handleClick = useCallback(() => {
-    setCount(count + 1);
-  }, [count]); // handleClick only changes when `count` changes
+    const incrementClick = useCallback(() => {
+        setCount(count + 1);
+    }, [count]); // handleClick only changes when `count` changes
 
+    const decrementClick = useCallback(() => {
+    setCount(count - 1);
+    }, [count]); // handleClick only changes when `count` changes
+
+    function IncrementUI({ onClick }) {
+        console.log('Increment rendered');
+        return <button onClick={onClick}>+</button>
+    }
+
+    function DecrementUI({ onClick }) {
+        console.log('Decrement rendered');
+        return <button onClick={onClick}>-</button>
+    }
+  
   return (
     <div>
-      <p>Count: {count}</p>
-      <Child onClick={handleClick} />
+       <p>Count: {count}</p>
+        <IncrementUI onClick={incrementClick}/>
+        <DecrementUI onClick={decrementClick}/>
     </div>
   );
 }
 
-export default Parent;
+export default Counter;
 ```
 
 - `useCallback(() => setCount(count + 1), [count])` returns the same `handleClick` function across renders unless `count` changes.
